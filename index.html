@@ -1,0 +1,65 @@
+<html>
+  <head>
+    <script src="https://cdn.firebase.com/v0/firebase.js"></script>
+    <script type="text/javascript" src="https://cdn.firebase.com/v0/firebase-simple-login.js">
+    </script>
+    <!--
+    <script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.1.5/angular.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/angularFire/0.2.0/angularfire.min.js"></script>
+    -->
+    <script src="angular.min.js"></script>
+    <script src="angularfire.min.js"></script>
+  </head>
+  <body ng-app="opentrackerapp" ng-controller="AppCtrl">
+    <a href ng-click="signin('github')" ng-if="!user">Sign in with Github</a>
+    <div ng-if="user">
+      Welcome, {{user.displayName}}!
+      <a href ng-click="signout()">Sign out</a>
+    </div>
+    <ul>
+      <li ng-repeat="project in projects">{{project.name}}: {{project.desc}}</li>
+    </ul>
+    <form ng-submit="add(project)">
+      <input type="text" ng-model="project.name" placeholder="Name" required/>
+      <input type="text" ng-model="project.desc" placeholder="Description"/>
+      <button type="submit">Submit</button>
+    </form>
+    <pre>{{user | json}}</pre>
+    <script>
+      var url = 'https://opentracker.firebaseio.com/projects';
+      var app = angular.module('opentrackerapp', ['firebase']);
+      app.controller('AppCtrl', ['$scope', 'angularFire',
+        function AppCtrl(scope, angularFire) {
+          window.scope = scope
+          scope.signin = function(id){
+            auth.login(id)
+          }
+          scope.signout = function(id){
+            auth.logout()
+          }
+          scope.add = function(project){
+            scope.projects.push(project)
+            scope.project = {}
+          }
+          function safeApply(fn) {
+            (scope.$$phase || scope.$root.$$phase) ? fn() : scope.$apply(fn);
+          }
+          scope.project = {}
+
+          var auth = new FirebaseSimpleLogin(new Firebase(url), function(error, user) {
+            if (error) {
+              console.log("error:", error);
+            } else {
+              safeApply(function(){
+                scope.user = user
+              })
+            }
+          });
+
+          var promise = angularFire(url, scope, 'projects', []);
+
+        }
+      ]);
+    </script>
+  </body>
+</html>

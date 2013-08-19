@@ -1,0 +1,18 @@
+{
+  "rules": {
+    ".read": "auth.email == 'suller.andras@gmail.com'",
+    ".write": "auth.email == 'suller.andras@gmail.com'",
+    "users": {
+      "$user": {
+        ".read": "$user == auth.username",
+        ".write": "$user == auth.username"
+      }
+    },
+    "projects": {
+      "$project": {
+        ".read": "data.child('creator/email').val() == auth.email",
+        ".write": "data.child('creator/email').val() == auth.email"
+      }
+    }
+  }
+}
