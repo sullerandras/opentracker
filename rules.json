@@ -10,8 +10,8 @@
     },
     "projects": {
       "$project": {
-        ".read": "data.child('creator/email').val() == auth.email",
-        ".write": "data.child('creator/email').val() == auth.email"
+        ".read":  "auth.email != ''",
+        ".write": "!data.exists() || auth.email == newData.child('creator_email').val()"
       }
     }
   }

@@ -24,9 +24,12 @@
       <input type="text" ng-model="project.desc" placeholder="Description"/>
       <button type="submit">Submit</button>
     </form>
+    project:
+    <pre>{{project | json}}</pre>
+    user:
     <pre>{{user | json}}</pre>
     <script>
-      var url = 'https://opentracker.firebaseio.com/projects';
+      var url = 'https://opentracker.firebaseio.com';
       var app = angular.module('opentrackerapp', ['firebase']);
       app.controller('AppCtrl', ['$scope', 'angularFire',
         function AppCtrl(scope, angularFire) {
@@ -38,25 +41,43 @@
             auth.logout()
           }
           scope.add = function(project){
-            scope.projects.push(project)
+            scope.project.creator_email = scope.user.email
+            scope.projects.push(scope.project)
             scope.project = {}
+          }
+          scope.escape = function(str){
+            return str.replace(/\./g, '_')
           }
           function safeApply(fn) {
             (scope.$$phase || scope.$root.$$phase) ? fn() : scope.$apply(fn);
           }
           scope.project = {}
 
-          var auth = new FirebaseSimpleLogin(new Firebase(url), function(error, user) {
+          var auth = new FirebaseSimpleLogin(new Firebase(url), function(error, auth_user) {
             if (error) {
               console.log("error:", error);
             } else {
               safeApply(function(){
-                scope.user = user
+                scope.auth_user = auth_user
+                if (auth_user) {
+                  var path = url+'/users/'+scope.escape(auth_user.id)
+                  var promise = angularFire(path, scope, 'user', {}).then(function(){
+                    safeApply(function(){
+                      scope.user.email = scope.auth_user.email
+                      scope.user.displayName = scope.auth_user.displayName
+                      scope.user.name = scope.auth_user.name
+                    })
+                  });
+                }
               })
             }
           });
 
-          var promise = angularFire(url, scope, 'projects', []);
+          // scope.$watch('user', function(){
+          //   if (scope.user) {
+          //     var promise = angularFire(url+'/projects', scope, 'projects', []);
+          //   }
+          // })
 
         }
       ]);
