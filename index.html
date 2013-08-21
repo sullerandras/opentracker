@@ -17,7 +17,7 @@
       <a href ng-click="signout()">Sign out</a>
     </div>
     <ul>
-      <li ng-repeat="project in projects">{{project.name}}: {{project.desc}}</li>
+      <li ng-repeat="(id, project) in projects">{{project.name}}: {{project.desc}}</li>
     </ul>
     <form ng-submit="add(project)">
       <input type="text" ng-model="project.name" placeholder="Name" required/>
@@ -43,11 +43,15 @@
             angularFireAuth.logout()
           }
           scope.add = function(project){
+            var project_id = 'p' + scope.auth_user.id + '_' + (Object.keys(scope.projects).length + 1)
             scope.project.creator_id = scope.auth_user.id
-            new Firebase(url+'/projects/123').set(scope.project, function(error){
+            scope.project.id = project_id
+            new Firebase(url+'/projects/'+project_id).set(scope.project, function(error){
               console.log('message from server:', error)
               safeApply(function(){
+                scope.user.projects.push(project_id)
                 scope.project = {}
+                associateProject(project_id)
               })
             });
             // angularFire(url+'/projects/234', scope, 'new_project', {}).then(function(result){
@@ -64,8 +68,13 @@
               (scope.$$phase || scope.$root.$$phase) ? fn() : scope.$apply(fn);
             })
           }
+          function associateProject(project_id){
+            angularFire(url+'/projects/'+project_id, scope, project_id, {}).then(function(result){
+              scope.projects[project_id] = scope[project_id]
+            })
+          }
           scope.project = {}
-          scope.projects = []
+          scope.projects = {}
 
           angularFireAuth.initialize(url, {name: 'auth_user'})
           scope.$watch('auth_user', function(){
@@ -78,9 +87,14 @@
                     scope.user.email       = scope.auth_user.email
                     scope.user.displayName = scope.auth_user.displayName
                     scope.user.name        = scope.auth_user.name
-                    scope.projects         = []
                   })
                 }
+                if (!scope.user.projects) {
+                  scope.user.projects = []
+                }
+                scope.user.projects.forEach(function(project_id){
+                  associateProject(project_id)
+                })
               });
             } else {
               if (scope.disassociate_user) scope.disassociate_user()
