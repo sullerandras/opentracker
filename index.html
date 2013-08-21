@@ -28,8 +28,6 @@
     <pre>{{project | json}}</pre>
     projects:
     <pre>{{projects | json}}</pre>
-    all_projects:
-    <pre>{{all_projects | json}}</pre>
     user:
     <pre>{{user | json}}</pre>
     <script>
@@ -45,12 +43,18 @@
             angularFireAuth.logout()
           }
           scope.add = function(project){
-            scope.project.creator_id = scope.user.id
-            // scope.projects.push(scope.project)
-            angularFire(url+'/projects/123', scope, 'new_project', {}).then(function(result){
-              scope.new_project = scope.project
-              scope.project = {}
+            scope.project.creator_id = scope.auth_user.id
+            new Firebase(url+'/projects/123').set(scope.project, function(error){
+              console.log('message from server:', error)
+              safeApply(function(){
+                scope.project = {}
+              })
             });
+            // angularFire(url+'/projects/234', scope, 'new_project', {}).then(function(result){
+            //   console.log('angular message from server:', result)
+            //   scope.new_project = scope.project
+            //   scope.project = {}
+            // });
           }
           scope.escape = function(str){
             return str.replace(/\./g, '_')
@@ -61,6 +65,7 @@
             })
           }
           scope.project = {}
+          scope.projects = []
 
           angularFireAuth.initialize(url, {name: 'auth_user'})
           scope.$watch('auth_user', function(){
@@ -73,19 +78,12 @@
                     scope.user.email       = scope.auth_user.email
                     scope.user.displayName = scope.auth_user.displayName
                     scope.user.name        = scope.auth_user.name
+                    scope.projects         = []
                   })
                 }
               });
-              angularFire(path+'/projects', scope, 'projects', []).then(function(result){
-                scope.disassociate_projects = result
-              });
-              angularFire(url+'/projects', scope, 'all_projects', []).then(function(result){
-                scope.disassociate_all_projects = result
-              });
             } else {
               if (scope.disassociate_user) scope.disassociate_user()
-              if (scope.disassociate_projects) scope.disassociate_projects()
-              if (scope.disassociate_all_projects) scope.disassociate_all_projects()
               scope.user = null
             }
           })
