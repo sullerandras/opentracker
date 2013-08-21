@@ -63,6 +63,7 @@
               if (auth_user) {
                 var path = url+'/users/'+auth_user.id
                 angularFire(path, scope, 'user', {}).then(function(result){
+                  scope.disassociate_user = result
                   if (scope.user == {}) {
                     safeApply(function(){
                       scope.user.email       = scope.auth_user.email
@@ -71,8 +72,9 @@
                     })
                   }
                 });
-                angularFire(url+'/projects', scope, 'projects', []);
+                // angularFire(url+'/projects', scope, 'projects', []);
               } else {
+                if (scope.disassociate_user) scope.disassociate_user()
                 scope.user = null
               }
             }
