@@ -26,6 +26,10 @@
     </form>
     project:
     <pre>{{project | json}}</pre>
+    projects:
+    <pre>{{projects | json}}</pre>
+    all_projects:
+    <pre>{{all_projects | json}}</pre>
     user:
     <pre>{{user | json}}</pre>
     <script>
@@ -41,9 +45,12 @@
             angularFireAuth.logout()
           }
           scope.add = function(project){
-            scope.project.creator_email = scope.user.email
-            scope.projects.push(scope.project)
-            scope.project = {}
+            scope.project.creator_id = scope.user.id
+            // scope.projects.push(scope.project)
+            angularFire(url+'/projects/123', scope, 'new_project', {}).then(function(result){
+              scope.new_project = scope.project
+              scope.project = {}
+            });
           }
           scope.escape = function(str){
             return str.replace(/\./g, '_')
@@ -69,9 +76,16 @@
                   })
                 }
               });
-              // angularFire(url+'/projects', scope, 'projects', []);
+              angularFire(path+'/projects', scope, 'projects', []).then(function(result){
+                scope.disassociate_projects = result
+              });
+              angularFire(url+'/projects', scope, 'all_projects', []).then(function(result){
+                scope.disassociate_all_projects = result
+              });
             } else {
               if (scope.disassociate_user) scope.disassociate_user()
+              if (scope.disassociate_projects) scope.disassociate_projects()
+              if (scope.disassociate_all_projects) scope.disassociate_all_projects()
               scope.user = null
             }
           })
