@@ -31,14 +31,14 @@
     <script>
       var url = 'https://opentracker.firebaseio.com';
       var app = angular.module('opentrackerapp', ['firebase']);
-      app.controller('AppCtrl', ['$scope', 'angularFire',
-        function AppCtrl(scope, angularFire) {
+      app.controller('AppCtrl', ['$scope', 'angularFire', 'angularFireAuth',
+        function AppCtrl(scope, angularFire, angularFireAuth) {
           window.scope = scope
           scope.signin = function(id){
-            auth.login(id)
+            angularFireAuth.login(id)
           }
           scope.signout = function(id){
-            auth.logout()
+            angularFireAuth.logout()
           }
           scope.add = function(project){
             scope.project.creator_email = scope.user.email
@@ -55,37 +55,26 @@
           }
           scope.project = {}
 
-          var auth = new FirebaseSimpleLogin(new Firebase(url), function(error, auth_user) {
-            if (error) {
-              console.log("error:", error);
+          angularFireAuth.initialize(url, {name: 'auth_user'})
+          scope.$watch('auth_user', function(){
+            if (scope.auth_user) {
+              var path = url+'/users/'+scope.auth_user.id
+              angularFire(path, scope, 'user', {}).then(function(result){
+                scope.disassociate_user = result
+                if (scope.user == {}) {
+                  safeApply(function(){
+                    scope.user.email       = scope.auth_user.email
+                    scope.user.displayName = scope.auth_user.displayName
+                    scope.user.name        = scope.auth_user.name
+                  })
+                }
+              });
+              // angularFire(url+'/projects', scope, 'projects', []);
             } else {
-              scope.auth_user = auth_user
-              if (auth_user) {
-                var path = url+'/users/'+auth_user.id
-                angularFire(path, scope, 'user', {}).then(function(result){
-                  scope.disassociate_user = result
-                  if (scope.user == {}) {
-                    safeApply(function(){
-                      scope.user.email       = scope.auth_user.email
-                      scope.user.displayName = scope.auth_user.displayName
-                      scope.user.name        = scope.auth_user.name
-                    })
-                  }
-                });
-                // angularFire(url+'/projects', scope, 'projects', []);
-              } else {
-                if (scope.disassociate_user) scope.disassociate_user()
-                scope.user = null
-              }
+              if (scope.disassociate_user) scope.disassociate_user()
+              scope.user = null
             }
-          });
-
-          // scope.$watch('user', function(){
-          //   if (scope.user) {
-          //     var promise = angularFire(url+'/projects', scope, 'projects', []);
-          //   }
-          // })
-
+          })
         }
       ]);
     </script>
