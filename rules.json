@@ -1,17 +1,15 @@
 {
   "rules": {
-    ".read": "auth.email == 'suller.andras@gmail.com'",
-    ".write": "auth.email == 'suller.andras@gmail.com'",
     "users": {
       "$user": {
-        ".read": "$user == auth.username",
-        ".write": "$user == auth.username"
+        ".read":  "$user == auth.id",
+        ".write": "$user == auth.id"
       }
     },
     "projects": {
       "$project": {
-        ".read":  "auth.email != ''",
-        ".write": "!data.exists() || auth.email == newData.child('creator_email').val()"
+        ".read":  "data.exists() && data.child('creator_id').val() == auth.id",
+        ".write": "!data.exists() || (data.child('creator_id').val() == auth.id && newData.child('creator_id').val() == auth.id)"
       }
     }
   }
