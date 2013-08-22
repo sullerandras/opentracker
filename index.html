@@ -17,7 +17,10 @@
       <a href ng-click="signout()">Sign out</a>
     </div>
     <ul>
-      <li ng-repeat="id in user.projects">{{this[id].name}}: {{this[id].desc}}</li>
+      <li ng-repeat="id in user.projects">
+        {{this[id].name}}: {{this[id].desc}}
+        <button type="button" ng-click="editProject(id)" ng-if="project.id != id">Edit</button>
+      </li>
     </ul>
     <form ng-submit="add(project)">
       <input type="text" ng-model="project.name" placeholder="Name" required/>
@@ -41,22 +44,27 @@
             angularFireAuth.logout()
           }
           scope.add = function(project){
-            var project_id = 'p' + scope.auth_user.id + '_' + (scope.user.projects.length + 1)
-            scope.project.creator_id = scope.auth_user.id
-            scope.project.id = project_id
-            new Firebase(url+'/projects/'+project_id).set(scope.project, function(error){
-              console.log('message from server:', error)
-              safeApply(function(){
-                scope.user.projects.push(project_id)
-                scope.project = {}
-                associateProject(project_id)
-              })
-            });
-            // angularFire(url+'/projects/234', scope, 'new_project', {}).then(function(result){
-            //   console.log('angular message from server:', result)
-            //   scope.new_project = scope.project
-            //   scope.project = {}
-            // });
+            if (project.id) { //edit project
+              var p = scope[project.id]
+              p.name = scope.project.name
+              p.desc = scope.project.desc
+              scope.project = {}
+            } else { //create new project
+              var project_id = 'p' + scope.auth_user.id + '_' + (scope.user.projects.length + 1)
+              scope.project.creator_id = scope.auth_user.id
+              scope.project.id = project_id
+              new Firebase(url+'/projects/'+project_id).set(scope.project, function(error){
+                console.log('message from server:', error)
+                safeApply(function(){
+                  scope.user.projects.push(project_id)
+                  scope.project = {}
+                  associateProject(project_id)
+                })
+              });
+            }
+          }
+          scope.editProject = function(project_id) {
+            scope.project = angular.copy(scope[project_id])
           }
           scope.escape = function(str){
             return str.replace(/\./g, '_')
