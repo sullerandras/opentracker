@@ -17,7 +17,7 @@
       <a href ng-click="signout()">Sign out</a>
     </div>
     <ul>
-      <li ng-repeat="(id, project) in projects">{{project.name}}: {{project.desc}}</li>
+      <li ng-repeat="id in user.projects">{{this[id].name}}: {{this[id].desc}}</li>
     </ul>
     <form ng-submit="add(project)">
       <input type="text" ng-model="project.name" placeholder="Name" required/>
@@ -26,8 +26,6 @@
     </form>
     project:
     <pre>{{project | json}}</pre>
-    projects:
-    <pre>{{projects | json}}</pre>
     user:
     <pre>{{user | json}}</pre>
     <script>
@@ -43,7 +41,7 @@
             angularFireAuth.logout()
           }
           scope.add = function(project){
-            var project_id = 'p' + scope.auth_user.id + '_' + (Object.keys(scope.projects).length + 1)
+            var project_id = 'p' + scope.auth_user.id + '_' + (scope.user.projects.length + 1)
             scope.project.creator_id = scope.auth_user.id
             scope.project.id = project_id
             new Firebase(url+'/projects/'+project_id).set(scope.project, function(error){
@@ -70,11 +68,9 @@
           }
           function associateProject(project_id){
             angularFire(url+'/projects/'+project_id, scope, project_id, {}).then(function(result){
-              scope.projects[project_id] = scope[project_id]
             })
           }
           scope.project = {}
-          scope.projects = {}
 
           angularFireAuth.initialize(url, {name: 'auth_user'})
           scope.$watch('auth_user', function(){
