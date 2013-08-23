@@ -10,7 +10,7 @@
     <script src="angular.min.js"></script>
     <script src="angularfire.js"></script>
   </head>
-  <body ng-app="opentrackerapp" ng-controller="AppCtrl">
+  <body ng-controller="AppCtrl">
     <a href ng-click="signin('github')" ng-if="!user">Sign in with Github</a>
     <div ng-if="user">
       Welcome, {{user.displayName}}!
@@ -33,89 +33,7 @@
     <pre>{{user | json}}</pre>
     auth_user:
     <pre>{{auth_user | json}}</pre>
-    <script>
-      var url = 'https://opentracker.firebaseio.com';
-      var app = angular.module('opentrackerapp', ['firebase']);
-      app.controller('AppCtrl', ['$scope', 'angularFire', 'angularFireAuth',
-        function AppCtrl(scope, angularFire, angularFireAuth) {
-          window.scope = scope
-          scope.signin = function(id){
-            angularFireAuth.login(id)
-          }
-          scope.signout = function(id){
-            angularFireAuth.logout()
-          }
-          scope.add = function(project){
-            if (project.id) { //edit project
-              var p = scope[project.id]
-              p.name = scope.project.name
-              p.desc = scope.project.desc
-              scope.project = {}
-            } else { //create new project
-              var project_id = generateProjectId()
-              scope.project.creator_id = scope.auth_user.id
-              scope.project.id = project_id
-              new Firebase(url+'/projects/'+project_id).set(scope.project, function(error){
-                console.log('message from server:', error)
-                safeApply(function(){
-                  if (scope.user.projects) {
-                    scope.user.projects.push(project_id)
-                  } else {
-                    scope.user.projects = [project_id]
-                  }
-                  scope.project = {}
-                  associateProject(project_id)
-                })
-              });
-            }
-          }
-          scope.editProject = function(project_id) {
-            scope.project = angular.copy(scope[project_id])
-          }
-          scope.escape = function(str){
-            return str.replace(/\./g, '_')
-          }
-          function generateProjectId(){
-            var id = scope.user.projects ? scope.user.projects.length + 1 : 1
-            return 'p' + scope.auth_user.id + '_' + id
-          }
-          function safeApply(fn) {
-            window.setTimeout(function(){
-              (scope.$$phase || scope.$root.$$phase) ? fn() : scope.$apply(fn);
-            })
-          }
-          function associateProject(project_id){
-            angularFire(url+'/projects/'+project_id, scope, project_id, {}).then(function(result){
-            })
-          }
-          scope.project = {}
-
-          angularFireAuth.initialize(url, {name: 'auth_user'})
-          scope.$watch('auth_user', function(){
-            if (scope.auth_user) {
-              var path = url+'/users/'+scope.auth_user.id
-              angularFire(path, scope, 'user', {}).then(function(result){
-                scope.disassociate_user = result
-                if (Object.keys(scope.user).length == 0) {
-                  safeApply(function(){
-                    scope.user.email       = scope.auth_user.email
-                    scope.user.displayName = scope.auth_user.displayName || scope.auth_user.username
-                    scope.user.name        = scope.auth_user.name || scope.auth_user.username
-                  })
-                }
-                if (scope.user.projects) {
-                  scope.user.projects.forEach(function(project_id){
-                    associateProject(project_id)
-                  })
-                }
-              });
-            } else {
-              if (scope.disassociate_user) scope.disassociate_user()
-              scope.user = null
-            }
-          })
-        }
-      ]);
-    </script>
+    <script type="text/coffeescript" src="app.coffee"></script>
+    <script type="text/javascript" src="coffee-script.js"></script>
   </body>
 </html>
