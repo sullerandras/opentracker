@@ -11,7 +11,11 @@
     <script src="angularfire.js"></script>
   </head>
   <body ng-controller="AppCtrl">
-    <a href ng-click="signin('github')" ng-if="!user">Sign in with Github</a>
+    <div ng-if="!user">
+      <a href ng-click="signin('github')">Sign in with Github</a>
+      <a href ng-click="signin('twitter')">Sign in with Twitter</a>
+      <a href ng-click="signin('password')">Sign in with Email/Password</a>
+    </div>
     <div ng-if="user">
       Welcome, {{user.displayName}}!
       <a href ng-click="signout()">Sign out</a>
